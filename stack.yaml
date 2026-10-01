@@ -1,0 +1,50 @@
+services:
+
+  app:
+    image: docker-1-app:1.0
+
+    ports:
+      - "8085:5000"
+
+    environment:
+      DB_HOST: database
+      DB_NAME: debugdb
+      DB_USER: admin
+      DB_PASSWORD: correctpassword
+      DB_PORT: "5432"
+
+    networks:
+      - employee-net
+
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  database:
+    image: postgres:15-alpine
+
+    environment:
+      POSTGRES_DB: debugdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: correctpassword
+
+    networks:
+      - employee-net
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+
+networks:
+  employee-net:
+    driver: overlay
+
+
+volumes:
+  postgres_data:

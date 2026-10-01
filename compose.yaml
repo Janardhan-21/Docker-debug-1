@@ -1,0 +1,49 @@
+services:
+
+  app:
+    build: .
+    ports:
+      - "8085:5000"
+
+    environment:
+      DB_HOST: database
+      DB_NAME: debugdb
+      DB_USER: admin
+      DB_PASSWORD: correctpassword
+      DB_PORT: "5432"
+
+    depends_on:
+      database:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  database:
+    image: postgres:15-alpine
+
+    environment:
+      POSTGRES_DB: debugdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: correctpassword
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d debugdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    restart: unless-stopped
+
+
+volumes:
+  postgres_data:
